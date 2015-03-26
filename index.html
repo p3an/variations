@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+        body {
+            background-color: black;
+        } 
+        p {
+            font-size: 1.3em;
+            font-family: Arial;
+            color: #fff;
+        }
+        #overlay {
+            position: absolute;
+            text-align: center;
+            margin-left: 40px;
+        }
+        #artname {
+            font-size: 1.5em;
+            margin-bottom: 1em;
+            padding: 0 0.2em;
+        }
+        #name {
+            margin: 0;
+        }
+        .smalltext {
+            font-size: 0.8em;
+            margin: 0;
+        }
+        #description {
+            font-size: 0.9em;
+            margin: 0.3em 0;
+        }
+        #url {
+            font-size: 0.9em;
+            margin: 0 0 3em;
+        }
+        a {
+            text-decoration: none;
+        }
+        #contact {
+            font-size: 1em;
+            margin-bottom: 8em;
+        }
+        #congrats {
+            margin-top: 8em;
+            padding: 0 1em;
+        }
+        .message-congrats {
+            margin-top: 3em;
+            padding: 0 1em;
+        }
+
+    </style>
+    <title>Planet3/art//news</title>
+    <script>
+
+        var difficulty = 1;
+        var hoverTint = '#009900';
+
+        var levelCounter = 0;
+
+        var stage;
+        var canvas;
+
+        var img;
+        var pieces;
+        var puzzleWidth;
+        var puzzleHeight;
+        var pieceWidth;
+        var pieceHeight;
+        var currentPiece;
+        var currentDropPiece;
+
+        var mouse;
+
+        var imgTitle = "Variations for Winds and Stringss";
+        var imgSrc = "./img/variations.jpg";
+        var artist = "Claire Zakiewicz";
+        var artistDescription = "London & New York";
+        var displayUrl = "www.clairezakiewicz.com/";
+        var imgDimensions = "46cm x 46cm";
+        var imgPrice = "&pound 400 unframed, &pound 550 framed";
+
+        //Called at the start of every new game and Level
+        function init (){
+        	difficulty +=1;
+            levelCounter +=1;
+
+            img = new Image();
+            img.addEventListener('load',onImage,false);
+          
+            img.src = imgSrc;
+        }
+
+        function onImage (){
+            pieceWidth = Math.floor(img.width / difficulty)
+            pieceHeight = Math.floor(img.height / difficulty)
+            puzzleWidth = pieceWidth * difficulty;
+            puzzleHeight = pieceHeight * difficulty;
+            setCanvas();
+            initPuzzle();
+        }
+
+        function setCanvas (){
+
+            canvas = document.getElementById('canvas');
+            stage = canvas.getContext('2d');
+            canvas.width = puzzleWidth;
+            canvas.height = puzzleHeight;
+            canvas.style.border = "1px solid black";
+        }
+
+        function initPuzzle (){
+
+            pieces = [];
+            mouse = {x:0,y:0};
+
+            currentPiece = null;
+            currentDropPiece = null;
+            stage.drawImage(img, 0, 0, puzzleWidth, puzzleHeight, 0, 0, puzzleWidth, puzzleHeight);
+            if (levelCounter === 1) {
+                createTitle("Click Here to Start");
+                buildPieces();
+                //resets movesCounter between levels
+                movesCounter = 0;
+            } else if (levelCounter === 2){
+    	        createDomMessage("<p id='congrats' class='deleteMe'>Congratulations! You finished Level " + 
+    	        (levelCounter - 1) + " in " + movesCounter + " moves!</p>");
+    	        createDomMessage("<p class='deleteMe'>Ready for the Next Puzzle?</p>");
+
+    	        buildPieces();
+    	        //resets movesCounter between levels
+    	        movesCounter = 0;
+                createTitle("Click Here to Start");
+            } else {
+                createDomMessage("<p id='artname' class='deleteMe'>" + imgTitle + "</p>");
+                createDomMessage("<p id='name' class='deleteMe'>" + artist + "</p>");
+                createDomMessage("<p id='description' class='deleteMe'>" + artistDescription + "</p>");
+                createDomMessage("<a href='http://" + displayUrl + "' target='_blank'><p id='url' class='deleteMe'>" + displayUrl + "</p></a><br>");
+                createDomMessage("<p class='smalltext deleteMe'>" + imgDimensions + "</p>");
+                createDomMessage("<p class='smalltext deleteMe'>"+imgPrice+"</p>");
+                createDomMessage("<p class='deleteMe message-congrats'>Congratulations! You finished Level " + 
+                (levelCounter - 1) + " in " + movesCounter + " moves!</p>");
+                createDomMessage("<p class='deleteMe'>Ready for the Next Puzzle?</p>");
+
+                buildPieces();
+                //resets movesCounter between levels
+                movesCounter = 0;
+                createTitle("Click Here to Start");
+            }
+        }
+
+        function createDomMessage (message) {
+
+            var overlay = document.getElementById("overlay");
+
+            var overlayWidth = img.width - 80;
+            var overlayHeight = img.height - 150;
+
+            overlay.style.width = overlayWidth + "px";
+            overlay.style.height = overlayHeight + "px";
+
+            overlay.style["top"] = "60px";
+            overlay.style["background-color"] = "rgba(0,0,0,0.6)";
+
+            var parser = new DOMParser()
+            var parsedHtml = parser.parseFromString(message, "text/html");
+            var HTML = parsedHtml.childNodes[0];
+            
+            var parsedMessage = HTML.childNodes[1];
+            document.getElementById("message").appendChild(parsedMessage.childNodes[0]);
+        }
+
+        function deleteDomMessage (classToDelete) {
+
+            var deleteMes = document.getElementsByClassName(classToDelete);
+            var overlay = document.getElementById("overlay");
+
+            if (deleteMes[0] === null)  return;
+
+            while (deleteMes[0]) {
+                deleteMes[0].parentNode.removeChild(deleteMes[0]);
+            }
+
+            overlay.style["background-color"] = "rgba(0,0,0,0)";
+            overlay.style["top"] = "0";
+        }
+
+        function createTitle (message){
+            stage.fillStyle = "#000000";
+            stage.globalAlpha = 0.8;
+            stage.fillRect(100,puzzleHeight - 40,puzzleWidth - 200,100);
+            stage.fillStyle = "#ffffff";
+            stage.globalAlpha = 1;
+            stage.textAlign = "center";
+            stage.textBaseline = "middle";
+            stage.font = "20px Arial";
+            stage.fillText(message,puzzleWidth / 2,puzzleHeight - 20);
+        }
+
+        function buildPieces (){
+
+            var i;
+            var piece;
+            var xPos = 0;
+            var yPos = 0;
+            for(i = 0;i < difficulty * difficulty;i++){
+                piece = {};
+                piece.sx = xPos;
+                piece.sy = yPos;
+                pieces.push(piece);
+                xPos += pieceWidth;
+                if(xPos >= puzzleWidth){
+                    xPos = 0;
+                    yPos += pieceHeight;
+                }
+            }
+
+            canvas.onclick = shufflePuzzle;
+        }
+
+        function shufflePuzzle (){
+
+            deleteDomMessage("deleteMe");
+
+            pieces = shuffleArrayPieces(pieces);
+            stage.clearRect(0,0,puzzleWidth,puzzleHeight);
+            var i;
+            var piece;
+            var xPos = 0;
+            var yPos = 0;
+            for(i = 0;i < pieces.length;i++){
+                piece = pieces[i];
+                piece.xPos = xPos;
+                piece.yPos = yPos;
+                stage.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, xPos, yPos, pieceWidth, pieceHeight);
+                stage.strokeRect(xPos, yPos, pieceWidth,pieceHeight);
+                xPos += pieceWidth;
+                if(xPos >= puzzleWidth){
+                    xPos = 0;
+                    yPos += pieceHeight;
+                }
+            }
+
+            document.onmousedown = onPuzzleClick;
+            document.addEventListener('touchstart', touchStart);
+        }
+
+        function touchStart (e) {
+            // stop touch event
+            e.stopPropagation();
+            e.preventDefault();
+
+            // translate to mouse event
+            var clkEvt = document.createEvent('MouseEvent');
+            clkEvt.initMouseEvent('mousedown', true, true, window, e.detail, 
+                         e.touches[0].screenX, e.touches[0].screenY, 
+                         e.touches[0].clientX, e.touches[0].clientY, 
+                         false, false, false, false, 
+                         0, null);
+            document.dispatchEvent(clkEvt);
+
+            // or just handle touch event
+            onPuzzleClick(e);
+        }
+
+        function shuffleArrayPieces (pieces){
+            for(var j, x, i = pieces.length; i; j = parseInt(Math.random() * i), x = pieces[--i], pieces[i] = pieces[j], pieces[j] = x);
+            return pieces;
+        }
+
+        function onPuzzleClick (e){
+
+            // to ensure on touch events, functions still work.
+            if (e.touches){
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            } else {
+                if(e.layerX || e.layerX == 0){
+                    mouse.x = e.layerX - canvas.offsetLeft;
+                    mouse.y = e.layerY - canvas.offsetTop;
+                }
+                else if(e.offsetX || e.offsetX == 0){
+                    mouse.x = e.offsetX - canvas.offsetLeft;
+                    mouse.y = e.offsetY - canvas.offsetTop;
+                }
+            }
+            currentPiece = checkPieceClicked();
+            
+            if(currentPiece != null){
+
+                stage.clearRect(currentPiece.xPos,currentPiece.yPos,pieceWidth,pieceHeight);
+                stage.save();
+                stage.globalAlpha = .9;
+                stage.drawImage(img, currentPiece.sx, currentPiece.sy, pieceWidth, pieceHeight, mouse.x - (pieceWidth / 2), mouse.y - (pieceHeight / 2), pieceWidth, pieceHeight);
+                stage.restore();
+
+                document.onmousemove = updatePuzzle;
+                document.addEventListener('touchmove', touchMove);
+
+                document.onmouseup = pieceDropped;
+                document.addEventListener('touchend', pieceDropped);
+                return;
+            }
+        }
+
+        function touchMove (e){
+            // stop touch event
+            e.stopPropagation();
+            e.preventDefault();
+
+            // translate to mouse event
+            var clkEvt = document.createEvent('MouseEvent');
+            clkEvt.initMouseEvent('mousemove', true, true, window, e.detail, 
+                         e.touches[0].screenX, e.touches[0].screenY, 
+                         e.touches[0].clientX, e.touches[0].clientY, 
+                         false, false, false, false, 
+                         0, null);
+            document.dispatchEvent(clkEvt);
+
+            // or just handle touch event
+            updatePuzzle(e);
+        }
+
+        function checkPieceClicked (e){
+            var i;
+            var piece;
+            for(i = 0;i < pieces.length;i++){
+                piece = pieces[i];
+                if(mouse.x < piece.xPos || mouse.x > (piece.xPos + 
+                    pieceWidth) || mouse.y < piece.yPos || mouse.y > (piece.yPos + 
+                    pieceHeight)){
+                    //return nothing so that loop continuess
+                }
+                else{
+                    return piece;
+                }
+            }
+            return null;
+        }
+
+        function updatePuzzle (e){
+            currentDropPiece = null;
+
+            if (e.touches){
+            // if (e.layerX === 0){
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            } else {
+                if(e.layerX || e.layerX == 0){
+                    mouse.x = e.layerX - canvas.offsetLeft;
+                    mouse.y = e.layerY - canvas.offsetTop;
+                }
+                else if(e.offsetX || e.offsetX == 0){
+                    mouse.x = e.offsetX - canvas.offsetLeft;
+                    mouse.y = e.offsetY - canvas.offsetTop;
+                }
+            }
+
+            stage.clearRect(0,0,puzzleWidth,puzzleHeight);
+            var i;
+            var piece;
+            for(i = 0;i < pieces.length;i++){
+                piece = pieces[i];
+                if(piece == currentPiece){
+                    continue;
+                }
+                stage.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.xPos, piece.yPos, pieceWidth, pieceHeight);
+                stage.strokeRect(piece.xPos, piece.yPos, pieceWidth,pieceHeight);
+                if(currentDropPiece == null){
+                    if(mouse.x < piece.xPos || mouse.x > (piece.xPos + pieceWidth) || mouse.y < piece.yPos || mouse.y > (piece.yPos + pieceHeight)){
+                        //NOT OVER
+                    }
+                    else{
+                        currentDropPiece = piece;
+                        stage.save();
+                        stage.globalAlpha = .4;
+                        stage.fillStyle = hoverTint;
+                        stage.fillRect(currentDropPiece.xPos,currentDropPiece.yPos,pieceWidth, pieceHeight);
+                        stage.restore();
+                    }
+                }
+            }
+            stage.save();
+            stage.globalAlpha = .6;
+            stage.drawImage(img, currentPiece.sx, currentPiece.sy, pieceWidth, pieceHeight, mouse.x - (pieceWidth / 2), mouse.y - (pieceHeight / 2), pieceWidth, pieceHeight);
+            stage.restore();
+            stage.strokeRect( mouse.x - (pieceWidth / 2), mouse.y - (pieceHeight / 2), pieceWidth,pieceHeight);
+        }
+
+        function pieceDropped (e){
+            //Counts number of moves in each level
+            movesCounter +=1;
+
+            canvas.onclick = null;
+            document.onmousemove = null;
+            document.onmouseup = null;
+
+            if(currentDropPiece != null){
+                var tmp = {xPos:currentPiece.xPos,yPos:currentPiece.yPos};
+                currentPiece.xPos = currentDropPiece.xPos;
+                currentPiece.yPos = currentDropPiece.yPos;
+                currentDropPiece.xPos = tmp.xPos;
+                currentDropPiece.yPos = tmp.yPos;
+            }
+            resetPuzzleAndCheckWin();
+        }
+        function resetPuzzleAndCheckWin (){
+            stage.clearRect(0,0,puzzleWidth,puzzleHeight);
+            var gameWin = true;
+            var i;
+            var piece;
+
+            for(i = 0;i < pieces.length;i++){
+                piece = pieces[i];
+                stage.drawImage(img, piece.sx, piece.sy, pieceWidth, pieceHeight, piece.xPos, piece.yPos, pieceWidth, pieceHeight);
+                stage.strokeRect(piece.xPos, piece.yPos, pieceWidth,pieceHeight);
+                if(piece.xPos != piece.sx || piece.yPos != piece.sy){
+                    gameWin = false;
+                }
+            }
+            if(gameWin){
+                setTimeout(gameOver,500);
+            }
+        }
+        function gameOver (){
+
+            canvas.onclick = null;
+            document.onmousedown = null;
+            document.onmousemove = null;
+            document.onmouseup = null;
+            
+            document.removeEventListener('touchstart', touchStart);
+            document.removeEventListener('touchmove', touchMove);
+            document.removeEventListener('touchend', pieceDropped);
+
+            if (levelCounter === 5 ) {
+
+                createDomMessage("<p id='artname' class='deleteMe'>" + imgTitle + "</p>");
+                createDomMessage("<p id='name' class='deleteMe'>" + artist + "</p>");
+                createDomMessage("<p id='description' class='deleteMe'>" + artistDescription + "</p>");
+                createDomMessage("<a href='http://" + displayUrl + "' target='_blank'><p id='url' class='deleteMe'>" + displayUrl + "</p></a><br>");
+                createDomMessage("<p class='smalltext deleteMe'>" + imgDimensions + "</p>");
+                createDomMessage("<p class='smalltext deleteMe'>"+imgPrice+"</p>");
+                createDomMessage("<p class='deleteMe'>You Won the Game!</p>");
+                createDomMessage("<p class='deleteMe message-congrats'>You finished Level " + (levelCounter) + " in " + movesCounter + " moves!</p>");
+            } else {
+                init();
+            }
+        }
+
+    </script>
+</head>
+
+<body onload="init();">
+    <div id="overlay">
+        <div id="message"></div>
+    </div>
+    <div id= "canvas-container">
+        <canvas id="canvas">Your Browser Doesn't support canvas. Update to Play!</canvas>
+    </div>
+</body>
+</html>
